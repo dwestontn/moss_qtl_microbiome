@@ -34,3 +34,8 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+
+#hide data sets
+edge.Results.csv
+edgeErode.Results.csv
+phenotype_data.csv
