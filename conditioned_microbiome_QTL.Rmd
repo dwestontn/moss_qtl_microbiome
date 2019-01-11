@@ -120,7 +120,6 @@ par(mfrow=c(1,3))
 plot(lmtidyoutput$p.value, lmtidyoutput$estimate, main = "p.value to slope")
 plot(lmtidyoutput$r.squared, lmtidyoutput$estimate, main = "r.squared to slope")
 plot(lmtidyoutput$p.value, lmtidyoutput$r.squared, main = "p.value to r.squared")
-
 ```
 
 
