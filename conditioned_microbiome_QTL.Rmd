@@ -33,6 +33,14 @@ fig.3_cap <- fig_nums(name = "fig_3",
 
 Sara Jawdy input
 
+Experiment was initiated on 8/9/2018.
+Initial data measure: 8/10/18
+Week 1 data measure: 8/17/18
+Week 2 data measure: 8/24/18
+Week 3 data measure: 8/31/18
+
+Notes from Sara: 3 plates of missing data; plate 12 Week1, Plate 57 week3, and plate 76 initial. 
+
 ## Data extraction methods
 
 Travis input
@@ -47,27 +55,73 @@ Notes on genotypes
   2. S.FallaxMN is the sequenced draft genome and used in Alyssa's experiments
   3. MNSA59 is the mother of the pedigree
 
-
 ```{r, echo=FALSE, fig.cap = fig.1_cap}
 library(tidyverse)
 datPhen<-read_csv("phenotype_data.csv")
-datPhen$Chamber<-as.character(datPhen$Chamber) #Changing chamber from integer to character class
+datPhen$chamber<-as.character(datPhen$chamber) #Changing chamber from integer to character class
 datEE<-read_csv("edgeErode.Results.csv") 
-datEE$Chamber<-as.character(datEE$Chamber) #Changing chamber from integer to character class
+datEE$chamber<-as.character(datEE$chamber) #Changing chamber from integer to character class
 datER<-read_csv("edge.Results.csv") 
-datER$Chamber<-as.character(datER$Chamber) #Changing chamber from integer to character class
+datER$chamber<-as.character(datER$chamber) #Changing chamber from integer to character class
 
 par(mfrow=c(1,3))
-hist(datPhen$`Area(cm2)`, xlim = c(0,3), ylim = c(0,2000))
-hist(datEE$`Area(cm2)`, xlim = c(0,3), ylim = c(0,2000))
-hist(datER$`Area(cm2)`, xlim = c(0,3), ylim = c(0,2000))
+hist(datPhen$area_cm2, xlim = c(0,3), ylim = c(0,2000))
+hist(datEE$area_cm2, xlim = c(0,3), ylim = c(0,2000))
+hist(datER$area_cm2, xlim = c(0,3), ylim = c(0,2000))
 
 #dat.initial.0cham0microb<-dat1 %>% filter(timepoint =="initial" & chamber =="0" & microb == "0") 
 
 ```
 
 
+A couple of ideas what to test:
+1) are the slopes of the data consistent across treatment (both chamber and microbe)
+2) Does starting amount influnce growth tragectories? 
 
+```{r}
+library(broom)
+
+#run linear gression model by genotype, micorbiome treatment and by temperature treatment
+
+
+#creating new column to ID complex treatments and selecting columns to tidy the data 
+lmdatainput <- datER %>% mutate(chamb_micro = paste(chamber, microbiome, sep = "_"))%>% select(timepoint, genotypeID, area_cm2, chamb_micro)
+
+#changing the categorical 'initial', 'week1' etc to numeric days for lm
+lmdatainput<- lmdatainput %>% mutate(sampletime = replace(timepoint, timepoint == "initial", 0)) %>%  mutate(sampletime = replace(sampletime, timepoint == "week1", 7)) %>% mutate(sampletime = replace(sampletime, timepoint == "week2", 14)) %>% mutate(sampletime = replace(sampletime, timepoint == "week3", 21))
+lmdatainput$sampletime<-as.numeric(lmdatainput$sampletime)
+
+#running the lm model across all rows, genotypes
+lm_results<- lmdatainput %>% group_by(genotypeID, chamb_micro) %>% do(fitgrowth = lm(area_cm2 ~ sampletime, data = .))
+
+#getting tidy data output from model run
+lmSlopePvalue <- tidy(lm_results, fitgrowth) %>% select(genotypeID, chamb_micro, term, estimate, p.value) %>% filter(term =="sampletime") lmRsquare <- glance(lm_results, fitgrowth) %>% select(genotypeID, chamb_micro, r.squared)
+
+#tidy data output
+lmtidyoutput<-left_join(lmSlopePvalue, lmRsquare, by = c("genotypeID" = "genotypeID", "chamb_micro" = "chamb_micro"))
+
+# lm model parameter distributions
+
+par(mfrow=c(1,3))
+hist(lmtidyoutput$estimate, main = "lm slope")
+hist(lmtidyoutput$p.value, main = "P value")
+hist(lmtidyoutput$r.squared, main = "r2")
+
+```
+
+
+
+
+
+```{r}
+
+ # lm model parameter relationships
+par(mfrow=c(1,3))
+plot(lmtidyoutput$p.value, lmtidyoutput$estimate, main = "p.value to slope")
+plot(lmtidyoutput$r.squared, lmtidyoutput$estimate, main = "r.squared to slope")
+plot(lmtidyoutput$p.value, lmtidyoutput$r.squared, main = "p.value to r.squared")
+
+```
 
 
 
