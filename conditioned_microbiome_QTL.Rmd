@@ -19,11 +19,11 @@ library(captioner)
 library(knitr)
 fig_nums <- captioner(prefix = "Fig.")
 fig.1_cap <- fig_nums(name = "fig_1", 
-                        caption = ".........")
+                        caption = "distribution of 3 differnt image extractions methods")
 fig.2_cap <- fig_nums(name = "fig_2", 
-                        caption = ".......")
+                        caption = "distributions of regression model paramters using datER data")
 fig.3_cap <- fig_nums(name = "fig_3", 
-                        caption = "......")
+                        caption = "regression model relationships")
 
 ```
 
@@ -78,11 +78,10 @@ A couple of ideas what to test:
 1) are the slopes of the data consistent across treatment (both chamber and microbe)
 2) Does starting amount influnce growth tragectories? 
 
-```{r}
+```{r, echo=FALSE, fig.cap = fig.2_cap}
+
 library(broom)
-
 #run linear gression model by genotype, micorbiome treatment and by temperature treatment
-
 
 #creating new column to ID complex treatments and selecting columns to tidy the data 
 lmdatainput <- datER %>% mutate(chamb_micro = paste(chamber, microbiome, sep = "_"))%>% select(timepoint, genotypeID, area_cm2, chamb_micro)
@@ -95,7 +94,9 @@ lmdatainput$sampletime<-as.numeric(lmdatainput$sampletime)
 lm_results<- lmdatainput %>% group_by(genotypeID, chamb_micro) %>% do(fitgrowth = lm(area_cm2 ~ sampletime, data = .))
 
 #getting tidy data output from model run
-lmSlopePvalue <- tidy(lm_results, fitgrowth) %>% select(genotypeID, chamb_micro, term, estimate, p.value) %>% filter(term =="sampletime") lmRsquare <- glance(lm_results, fitgrowth) %>% select(genotypeID, chamb_micro, r.squared)
+lmSlopePvalue <- tidy(lm_results, fitgrowth) %>% select(genotypeID, chamb_micro, term, estimate, p.value) %>% filter(term =="sampletime")
+
+lmRsquare <- glance(lm_results, fitgrowth) %>% select(genotypeID, chamb_micro, r.squared)
 
 #tidy data output
 lmtidyoutput<-left_join(lmSlopePvalue, lmRsquare, by = c("genotypeID" = "genotypeID", "chamb_micro" = "chamb_micro"))
@@ -113,7 +114,7 @@ hist(lmtidyoutput$r.squared, main = "r2")
 
 
 
-```{r}
+```{r, echo=FALSE, fig.cap = fig.3_cap}
 
  # lm model parameter relationships
 par(mfrow=c(1,3))
@@ -123,9 +124,93 @@ plot(lmtidyoutput$p.value, lmtidyoutput$r.squared, main = "p.value to r.squared"
 ```
 
 
+Gloabl patterns that include treatment (NOT genotype at this point)
+NOTE: augment gives infor about the error from each point in a regression. use this to look for patterns at sampling timepoints -- is there less predicitve power at week 3 than week 1 for example? use (.resid) for this (that is difference of actual from predicted)
+
+```{r}
+library(ggplot2)
+
+par(mfrow=c(1,3))
+ggplot(lmtidyoutput, aes(x= chamb_micro, y= estimate)) +
+  geom_boxplot()
+ggplot(lmtidyoutput, aes(x= chamb_micro, y= r.squared)) +
+  geom_boxplot()
+ggplot(lmtidyoutput, aes(x= chamb_micro, y= p.value)) +
+  geom_boxplot()
+
+```
 
 
 
 
+
+
+
+
+```{r}
+#boxplot
+
+  a <- augment(lm_results, fitgrowth)
+  
+  #str(a) says sampletime is numeric, change to factor
+  
+  a$sampletime<-as.factor(a$sampletime)
+  
+  ggplot(a, aes(color = chamb_micro, y= .resid, x= sampletime)) +
+  geom_boxplot(position=position_dodge(.8)) +
+  geom_jitter(position=position_dodge(.8)) +
+  theme(axis.text=element_text(size=12),
+        axis.text.x = element_text(angle = 90, vjust = 0.5),
+        axis.title=element_text(size=16,face="bold"),
+        legend.text=element_text(size=16))
+
+```
+
+
+
+
+# Get lag values for growth accumulation (growth difference from previous date. initial is set to 0)
+
+
+```{r}
+datER<- datER %>% mutate(cham_micro = paste(chamber, microbiome, sep = "_"))
+
+datERdiff<-datER %>%
+    group_by(genotypeID, cham_micro) %>%
+    mutate(growth.diff = area_cm2 - lag(area_cm2, default = first(area_cm2)))
+
+  ggplot(datERdiff, aes(color = cham_micro, y= growth.diff, x= timepoint)) +
+  geom_boxplot(position=position_dodge(.8)) +
+  geom_jitter(position=position_dodge(.8)) +
+  theme(axis.text=element_text(size=12),
+        axis.text.x = element_text(angle = 90, vjust = 0.5),
+        axis.title=element_text(size=16,face="bold"),
+        legend.text=element_text(size=16))
+
+
+```
+
+
+```{r}
+
+test<-datERdiff %>% select(timepoint, genotypeID, area_cm2, cham_micro) %>% filter(timepoint == "initial" | timepoint =="week1")
+
+datERdiff.week1<-test %>%
+    group_by(genotypeID, cham_micro) %>%
+    mutate(week1.diff = area_cm2 - lag(area_cm2, default = first(area_cm2))) %>% filter(timepoint =="week1")
+
+  ggplot(datERdiff.week1, aes(color = cham_micro, y= week1.diff, x= cham_micro)) +
+  geom_boxplot(position=position_dodge(.8)) +
+  geom_jitter(position=position_dodge(.8)) +
+  theme(axis.text=element_text(size=12),
+        axis.text.x = element_text(angle = 90, vjust = 0.5),
+        axis.title=element_text(size=16,face="bold"),
+        legend.text=element_text(size=16))
+
+
+  
+  
+  
+```
 
 

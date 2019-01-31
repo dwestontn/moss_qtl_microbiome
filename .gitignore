@@ -39,3 +39,6 @@ rsconnect/
 edge.Results.csv
 edgeErode.Results.csv
 phenotype_data.csv
+
+#don't track HTML output
+conditioned_microbiome_QTL.html
