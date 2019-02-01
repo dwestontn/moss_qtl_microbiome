@@ -219,3 +219,28 @@ datlocaldiff.week1<-test %>%
 ```
 
 
+Ok the local data seem to look pretty, especially when I spot check with the genotypes used in Alyssa's experiments and the mother of the population. 
+
+One problem is that values from sertain weeks will deviate from the trend due measurement error. Below we investigate the option of using predicted values for the the comparison. 
+
+
+```{r, echo=FALSE}
+
+#starting with lmdatainput input from above
+
+pred.lmdatainput<-lmdatainput %>%
+  group_by(genotype, chamb_micro) %>%
+  do({
+    mod <- lm(area_cm2 ~ sampletime, data = .)
+    pred.area <- predict(mod, newdata = .["sampletime"])
+    data.frame(., pred.area)
+  })
+
+plot(pred.lmdatainput$area_cm2, pred.lmdatainput$pred.area)
+
+```
+
+
+
+
+
