@@ -43,6 +43,9 @@ phenotype_data.csv
 #don't track HTML output or new data from Travis
 conditioned_microbiome_QTL.html
 localfilter.Results.csv
+slope_r2_pvalue_qtl_pop.csv
+predicted_area_qtl.csv
+
 
 #made new notebook running data from best tested image extraction
 conditioned_microbiome_QTL_localdata.html

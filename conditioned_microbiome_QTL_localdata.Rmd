@@ -267,6 +267,14 @@ pred.lmdatainput %>% group_by(chamb_micro) %>% summarise(mu.area = mean(area_cm2
 ```
 
 
+```{r, echo=FALSE}
+
+ggplot(pred.lmdatainput, aes(area_cm2, pred.area, color = chamb_micro)) + geom_point()
+
+```
+
+
+
 now looking at the diffrence between min and max values (initial and final observations?)
 
 ```{r, echo=FALSE}
@@ -297,6 +305,25 @@ ggplot(rel.chang.pred, aes(color = chamb_micro, y= growth.diff , x= chamb_micro)
         legend.text=element_text(size=16))
 
 ```
+
+
+what are the questions to test??
+
+1) genotypes that have a cost with mismatched microbe to chamber conditions
+2) genotypes that have a benefit with mismatched microbe to chamber conditions
+3) genotypes that have a cost with matched microbe to chamber conditions
+4) genotypes that have a benefit with matched microbe to chamber conditions
+
+
+
+
+
+
+
+
+
+
+
 
 
 
