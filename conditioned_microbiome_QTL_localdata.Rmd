@@ -241,6 +241,63 @@ plot(pred.lmdatainput$area_cm2, pred.lmdatainput$pred.area)
 ```
 
 
+How do the predicted and actual values compare?
+
+```{r, echo=FALSE}
+
+summary(pred.lmdatainput)
+
+```
+
+
+```{r, echo=FALSE}
+
+pred.lmdatainput<-pred.lmdatainput %>% mutate(delta.pred.obs = abs(area_cm2 - pred.area))
+
+pred.lmdatainput %>% group_by(chamb_micro) %>% summarise(mu.delta = mean(delta.pred.obs), sd.delta = sd(delta.pred.obs))
+
+```
+
+
+
+```{r, echo=FALSE}
+
+pred.lmdatainput %>% group_by(chamb_micro) %>% summarise(mu.area = mean(area_cm2), mu.pred.area = mean(pred.area), sd.area = sd(area_cm2), sd.pred.area = sd(pred.area))
+
+```
+
+
+now looking at the diffrence between min and max values (initial and final observations?)
+
+```{r, echo=FALSE}
+
+rel.chang.pred<-pred.lmdatainput %>% group_by(genotype, chamb_micro) %>% summarise(growth.diff = max(pred.area) - min(pred.area), relat.change = (max(pred.area) - min(pred.area))/min(pred.area))
+
+
+ggplot(rel.chang.pred, aes(color = chamb_micro, y= relat.change, x= chamb_micro)) +
+  geom_boxplot(position=position_dodge(.8)) +
+  geom_jitter(position=position_dodge(.8)) +
+  theme(axis.text=element_text(size=12),
+        axis.text.x = element_text(angle = 90, vjust = 0.5),
+        axis.title=element_text(size=16,face="bold"),
+        legend.text=element_text(size=16))
+
+```
+
+
+
+```{r, echo=FALSE}
+
+ggplot(rel.chang.pred, aes(color = chamb_micro, y= growth.diff , x= chamb_micro)) +
+  geom_boxplot(position=position_dodge(.8)) +
+  geom_jitter(position=position_dodge(.8)) +
+  theme(axis.text=element_text(size=12),
+        axis.text.x = element_text(angle = 90, vjust = 0.5),
+        axis.title=element_text(size=16,face="bold"),
+        legend.text=element_text(size=16))
+
+```
+
 
 
 
